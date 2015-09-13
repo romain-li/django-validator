@@ -1,11 +1,9 @@
 import unittest
 from django.http import HttpRequest
 from rest_framework import generics
-from rest_framework.exceptions import ValidationError
 from django_validator.converters import ConverterRegistry, BaseConverter
 from django_validator.decorators import param, GET, POST
-from django_validator.validators import ValidatorRegistry, RequiredValidator, MaxValidator, InValidator, MinValidator, \
-    BetweenValidator, RegexValidator, IntegerValidator, NumericValidator, BaseValidator
+from django_validator.validators import *
 
 
 class FakeRequest(HttpRequest):
@@ -154,8 +152,8 @@ class ValidatorTest(unittest.TestCase):
     """
 
     @staticmethod
-    def _validator(validator, value):
-        return validator('test', {'test': value})
+    def _validator(validator, value, other=None):
+        return validator('test', {'test': value, 'other': other})
 
     def test_registry(self):
         # Test the default validator registry
@@ -170,6 +168,36 @@ class ValidatorTest(unittest.TestCase):
         self.assertTrue(self._validator(validator, 'test'))
         self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, None)
         self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, '')
+
+    def test_required_with_validator(self):
+        validator = RequiredWithValidator('other')
+        self.assertTrue(self._validator(validator, 'test'))
+        self.assertTrue(self._validator(validator, 'test', 'test'))
+        self.assertTrue(self._validator(validator, None))
+        self.assertTrue(self._validator(validator, ''))
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, None, 'test')
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, '', 'test')
+
+    def test_required_without_validator(self):
+        validator = RequiredWithoutValidator('other')
+        self.assertTrue(self._validator(validator, 'test'))
+        self.assertTrue(self._validator(validator, 'test', 'test'))
+        self.assertTrue(self._validator(validator, None, 'test'))
+        self.assertTrue(self._validator(validator, '', 'test'))
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, None)
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, '')
+
+    def test_required_if_validator(self):
+        validator = RequiredIfValidator('other', 'test')
+        self.assertTrue(self._validator(validator, 'test'))
+        self.assertTrue(self._validator(validator, 'test', 'test'))
+        self.assertTrue(self._validator(validator, 'test', 'other'))
+        self.assertTrue(self._validator(validator, None))
+        self.assertTrue(self._validator(validator, None, 'other'))
+        self.assertTrue(self._validator(validator, ''))
+        self.assertTrue(self._validator(validator, '', 'other'))
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, None, 'test')
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, '', 'test')
 
     def test_max_validator(self):
         validator = MaxValidator(10)
@@ -247,13 +275,22 @@ class ValidatorTest(unittest.TestCase):
         self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, 0)
         self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, '0')
 
+    def test_not_in_validator(self):
+        validator = NotInValidator('1', '2', '3')
+        self.assertTrue(self._validator(validator, None))
+        self.assertTrue(self._validator(validator, 0))
+        self.assertTrue(self._validator(validator, '0'))
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, 1)
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, 2)
+        self.assertRaisesRegexp(ValidationError, 'test', self._validator, validator, 3)
+
 
 class UsageTest(unittest.TestCase):
     def setUp(self):
         self.test = FakeRequest.test
 
     def test_usage1(self):
-        @POST('name', validators='required')
+        @POST('name', validators='required', validator_classes=RegexValidator('name', message='custom message'))
         @POST('password', validators='required', validator_classes=[RegexValidator('^(password|pwd)$')])
         def view(request, name, password):
             self.assertEqual(name, 'name')
@@ -266,6 +303,8 @@ class UsageTest(unittest.TestCase):
             self.test(view, post={'name': 'name'})
         with self.assertRaisesRegexp(ValidationError, 'password'):
             self.test(view, post={'name': 'name', 'password': 'password1'})
+        with self.assertRaisesRegexp(ValidationError, 'custom message'):
+            self.test(view, post={'name': 'test', 'password': 'password'})
 
     def test_usage2(self):
         @GET('keyword', validators=None)

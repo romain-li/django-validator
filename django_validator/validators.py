@@ -1,13 +1,24 @@
-# TODO: Add django translate feature
+"""
+Validators to check if the params is valid.
+
+Use ValidatorRegistry to register or get validator from registry,
+and parse validator from string.
+
+Inherit BaseValidator to implement your custom validators.
+"""
 import re
 
 from django.utils.translation import ugettext_lazy as _
+from rest_framework import status
+
 from django_validator.exceptions import ValidationError
 
 
 class ValidatorRegistry(object):
     """
     Registry for all validators.
+
+    You can register and get validator classes from its class methods.
     """
     _registry = {}
 
@@ -55,8 +66,20 @@ class ValidatorRegistry(object):
 
 
 class BaseValidator(object):
-    message = _('The {key} field is invalid.')
-    # When this param set to True, validator will skip when value is None.
+    """
+    Super class for all validators.
+
+    You can overwrite these params and functions:
+
+    code: error_code in the raised error.
+    message: error_message in the raised error.
+    nullable: when this param set to True, validator will skip when value is None.
+    clean: class will call this function to clean value before validate it.
+    is_valid: you must overwrite this function to implement your logic.
+    """
+    status_code = status.HTTP_400_BAD_REQUEST
+    code = 'base_validator'
+    message = _('The {key} is invalid.')
     nullable = True
     clean = lambda self, x: x
 
@@ -64,10 +87,11 @@ class BaseValidator(object):
         value = params.get(key)
         if value is None and self.nullable:
             return True
+
         cleaned = self.clean(value)
         message_params = {'show_value': cleaned, 'value': value, 'key': key}
         if not self.is_valid(cleaned, params):
-            raise ValidationError(self.message.format(**message_params))
+            raise ValidationError(self.message.format(**message_params), self.code, self.status_code)
         return True
 
     def is_valid(self, value, params):
@@ -75,10 +99,18 @@ class BaseValidator(object):
 
 
 class RequiredValidator(BaseValidator):
-    message = _('The {key} field is required.')
+    """
+    Validate the value is required.
+    """
+    code = 'required_validator'
+    message = _('The {key} is required.')
     nullable = False
 
     def is_valid(self, value, params):
+        return RequiredValidator.required_valid(value)
+
+    @staticmethod
+    def required_valid(value):
         if value is None:
             return False
         elif isinstance(value, str) and value.strip() == '':
@@ -86,10 +118,69 @@ class RequiredValidator(BaseValidator):
         return True
 
 
+class RequiredWithValidator(BaseValidator):
+    """
+    Validate the value when other value is set.
+    """
+    code = 'required_with_validator'
+    nullable = False
+
+    def __init__(self, other):
+        self.other = other
+        self.message = _('The {{key}} is required with {other}'.format(other=other))
+
+    def is_valid(self, value, params):
+        if params.get(self.other) is not None:
+            return RequiredValidator.required_valid(value)
+        else:
+            return True
+
+
+class RequiredWithoutValidator(BaseValidator):
+    """
+    Validate the value when other value is not set.
+    """
+    code = 'required_without_validator'
+    nullable = False
+
+    def __init__(self, other):
+        self.other = other
+        self.message = _('The {{key}} is required without {other}'.format(other=other))
+
+    def is_valid(self, value, params):
+        if params.get(self.other) is None:
+            return RequiredValidator.required_valid(value)
+        else:
+            return True
+
+
+class RequiredIfValidator(BaseValidator):
+    """
+    Validate the value if other value is equals to your expectation.
+    """
+    code = 'required_if_validator'
+    nullable = False
+
+    def __init__(self, other, other_value):
+        self.other = other
+        self.other_value = other_value
+        self.message = _(
+            'The {{key}} is required when {other} is {other_value}'.format(other=other, other_value=other_value)
+        )
+
+    def is_valid(self, value, params):
+        other_value = params.get(self.other)
+        if other_value is not None and str(other_value) == self.other_value:
+            return RequiredValidator.required_valid(value)
+        else:
+            return True
+
+
 class MinValidator(BaseValidator):
     """
     Mix min value and min length validators.
     """
+    code = 'min_validator'
 
     def __init__(self, min_value):
         self.min_value = int(min_value)
@@ -107,6 +198,7 @@ class MaxValidator(BaseValidator):
     """
     Mix max value and max length validators.
     """
+    code = 'max_validator'
 
     def __init__(self, max_value):
         self.max_value = int(max_value)
@@ -124,6 +216,7 @@ class BetweenValidator(BaseValidator):
     """
     Mix min and max validators.
     """
+    code = 'between_validator'
 
     def __init__(self, min_value, max_value):
         self.min_value = int(min_value)
@@ -131,12 +224,16 @@ class BetweenValidator(BaseValidator):
 
     def is_valid(self, value, params):
         if isinstance(value, str):
-            self.message = _('The {{key}} must be between {min} and {max} characters.').format(min=self.min_value,
-                                                                                               max=self.max_value)
+            self.message = _('The {{key}} must be between {min} and {max} characters.').format(
+                min=self.min_value,
+                max=self.max_value
+            )
             return self.min_value <= len(value) <= self.max_value
         else:
-            self.message = _('The {{key}} must be between {min} and {max}.').format(min=self.min_value,
-                                                                                    max=self.max_value)
+            self.message = _('The {{key}} must be between {min} and {max}.').format(
+                min=self.min_value,
+                max=self.max_value
+            )
             return self.min_value <= value <= self.max_value
 
 
@@ -144,6 +241,8 @@ class BaseRegexValidator(BaseValidator):
     """
     Base class for regex validators.
     """
+    code = 'regex_validator'
+    message = _('The {key} format is invalid.')
     regex = None
 
     @staticmethod
@@ -160,16 +259,18 @@ class RegexValidator(BaseRegexValidator):
     """
     Custom regex validator.
     """
-    message = _('The {key} format is invalid.')
 
-    def __init__(self, regex):
+    def __init__(self, regex, message=None):
         self.regex = re.compile(regex)
+        if message:
+            self.message = message
 
 
 class IntegerValidator(BaseRegexValidator):
     """
     Inherit regex validator to confirm integers.
     """
+    code = 'integer_validator'
     message = _('The {key} must be an integer.')
     regex = re.compile('^-?\d+\Z')
 
@@ -178,6 +279,7 @@ class NumericValidator(BaseRegexValidator):
     """
     Inherit regex validator to confirm numbers.
     """
+    code = 'numeric_validator'
     message = _('The {key} must be a number.')
     regex = re.compile('^-?\d*(\.\d+)?(e-?\d+)?\Z')
 
@@ -186,6 +288,7 @@ class InValidator(BaseValidator):
     """
     Check if the value is in the choices list.
     """
+    code = 'in_validator'
     message = _('The selected {key} is invalid.')
 
     def __init__(self, *choices):
@@ -201,8 +304,21 @@ class InValidator(BaseValidator):
         return value in self.choices
 
 
+class NotInValidator(InValidator):
+    """
+    Check if the value is not in the choices list.
+    """
+    code = 'not_in_validator'
+
+    def is_valid(self, value, params):
+        return value not in self.choices
+
+
 # Register all validators
 ValidatorRegistry.register('required', RequiredValidator)
+ValidatorRegistry.register('required_with', RequiredWithValidator)
+ValidatorRegistry.register('required_without', RequiredWithoutValidator)
+ValidatorRegistry.register('required_if', RequiredIfValidator)
 ValidatorRegistry.register('max', MaxValidator)
 ValidatorRegistry.register('min', MinValidator)
 ValidatorRegistry.register('between', BetweenValidator)
@@ -210,3 +326,4 @@ ValidatorRegistry.register('regex', RegexValidator)
 ValidatorRegistry.register('integer', IntegerValidator)
 ValidatorRegistry.register('numeric', NumericValidator)
 ValidatorRegistry.register('in', InValidator)
+ValidatorRegistry.register('not_in', NotInValidator)

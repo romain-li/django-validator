@@ -7,7 +7,7 @@ from django_validator.validators import ValidatorRegistry
 
 def _get_lookup(request, name, default):
     # Try to be compatible with older django rest framework.
-    if request.query_params is not None:
+    if hasattr(request, 'query_params'):
         return request.query_params.get(name, default)
     else:
         return request.GET.get(name, default)
@@ -32,7 +32,7 @@ class _Param(object):
         self.separator = separator
         self.validators = ValidatorRegistry.get_validators(validators)
         if validator_classes:
-            if validator_classes.__iter__:
+            if hasattr(validator_classes, '__iter__'):
                 self.validators.extend(validator_classes)
             else:
                 self.validators.append(validator_classes)
@@ -45,6 +45,7 @@ class _Param(object):
         @wraps(func)
         def _decorator(*args, **kwargs):
             if len(args) < 1:
+                # Call function immediately, maybe raise an error is better.
                 return func(*args, **kwargs)
 
             if isinstance(args[0], rest_framework.views.APIView):
@@ -53,10 +54,10 @@ class _Param(object):
                 request = args[0]
 
             if request:
-                # Checkout all the params first
+                # Checkout all the params first.
                 for _param in _decorator.__params__:
                     _param._parse(request, kwargs)
-                # Validate after all the params has checked out
+                # Validate after all the params has checked out, because some validators needs all the params.
                 for _param in _decorator.__params__:
                     for validator in _param.validators:
                         validator(_param.name, kwargs)
