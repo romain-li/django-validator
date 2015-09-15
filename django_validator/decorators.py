@@ -14,7 +14,19 @@ def _get_lookup(request, name, default):
 
 
 def _post_lookup(request, name, default):
-    return request.data.get(name, default)
+    if hasattr(request, 'data'):
+        return request.data.get(name, default)
+    else:
+        return request.DATA.get(name, default)
+
+
+def _post_or_get_lookup(request, name, default):
+    if hasattr(request, 'data'):
+        value = request.data.get('name')
+        return value if value is not None else _get_lookup(request, name, default)
+    else:
+        value = request.DATA.get(name)
+        return value if value is not None else _get_lookup(request, name, default)
 
 
 def param(name, default=None, type='string', lookup=_get_lookup, many=False, separator=',', validators=None,
@@ -89,3 +101,4 @@ class _Param(object):
 
 GET = partial(param, lookup=_get_lookup)
 POST = partial(param, lookup=_post_lookup)
+POST_OR_GET = partial(param, lookup=_post_or_get_lookup)
