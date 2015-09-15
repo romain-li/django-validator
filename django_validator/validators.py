@@ -83,6 +83,10 @@ class BaseValidator(object):
     nullable = True
     clean = lambda self, x: x
 
+    def __init__(self, message=None):
+        if message:
+            self.message = message
+
     def __call__(self, key, params):
         value = params.get(key)
         if value is None and self.nullable:
@@ -96,6 +100,16 @@ class BaseValidator(object):
 
     def is_valid(self, value, params):
         raise NotImplementedError
+
+    def set_message(self, message):
+        """
+        Set custom message with function.
+
+        For example:
+        @GET('xxx', validator_classes=xxxValidator().set_message('xxx'))
+        """
+        self.message = message
+        return self
 
 
 class RequiredValidator(BaseValidator):
@@ -125,7 +139,8 @@ class RequiredWithValidator(BaseValidator):
     code = 'required_with_validator'
     nullable = False
 
-    def __init__(self, other):
+    def __init__(self, other, message=None):
+        super(RequiredWithValidator, self).__init__(message)
         self.other = other
         self.message = _('The {{key}} is required with {other}'.format(other=other))
 
@@ -143,7 +158,8 @@ class RequiredWithoutValidator(BaseValidator):
     code = 'required_without_validator'
     nullable = False
 
-    def __init__(self, other):
+    def __init__(self, other, message=None):
+        super(RequiredWithoutValidator, self).__init__(message)
         self.other = other
         self.message = _('The {{key}} is required without {other}'.format(other=other))
 
@@ -161,7 +177,8 @@ class RequiredIfValidator(BaseValidator):
     code = 'required_if_validator'
     nullable = False
 
-    def __init__(self, other, other_value):
+    def __init__(self, other, other_value, message=None):
+        super(RequiredIfValidator, self).__init__(message)
         self.other = other
         self.other_value = other_value
         self.message = _(
@@ -183,6 +200,7 @@ class MinValidator(BaseValidator):
     code = 'min_validator'
 
     def __init__(self, min_value):
+        super(MinValidator, self).__init__()
         self.min_value = int(min_value)
 
     def is_valid(self, value, params):
@@ -201,6 +219,7 @@ class MaxValidator(BaseValidator):
     code = 'max_validator'
 
     def __init__(self, max_value):
+        super(MaxValidator, self).__init__()
         self.max_value = int(max_value)
 
     def is_valid(self, value, params):
@@ -219,6 +238,7 @@ class BetweenValidator(BaseValidator):
     code = 'between_validator'
 
     def __init__(self, min_value, max_value):
+        super(BetweenValidator, self).__init__()
         self.min_value = int(min_value)
         self.max_value = int(max_value)
 
@@ -261,9 +281,8 @@ class RegexValidator(BaseRegexValidator):
     """
 
     def __init__(self, regex, message=None):
+        super(RegexValidator, self).__init__(message)
         self.regex = re.compile(regex)
-        if message:
-            self.message = message
 
 
 class IntegerValidator(BaseRegexValidator):
@@ -274,6 +293,9 @@ class IntegerValidator(BaseRegexValidator):
     message = _('The {key} must be an integer.')
     regex = re.compile('^-?\d+\Z')
 
+    def __init__(self, message=None):
+        super(IntegerValidator, self).__init__(message)
+
 
 class NumericValidator(BaseRegexValidator):
     """
@@ -282,6 +304,9 @@ class NumericValidator(BaseRegexValidator):
     code = 'numeric_validator'
     message = _('The {key} must be a number.')
     regex = re.compile('^-?\d*(\.\d+)?(e-?\d+)?\Z')
+
+    def __init__(self, message=None):
+        super(NumericValidator, self).__init__(message)
 
 
 class InValidator(BaseValidator):
@@ -292,6 +317,7 @@ class InValidator(BaseValidator):
     message = _('The selected {key} is invalid.')
 
     def __init__(self, *choices):
+        super(InValidator, self).__init__()
         self.choices = choices
 
     @staticmethod
