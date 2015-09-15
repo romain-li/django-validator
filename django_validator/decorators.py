@@ -29,14 +29,15 @@ def _post_or_get_lookup(request, name, default):
         return value if value is not None else _get_lookup(request, name, default)
 
 
-def param(name, default=None, type='string', lookup=_get_lookup, many=False, separator=',', validators=None,
-          validator_classes=None):
-    return _Param(name, default, type, lookup, many, separator, validators, validator_classes)
+def param(name, related_name=None, default=None, type='string', lookup=_get_lookup, many=False, separator=',',
+          validators=None, validator_classes=None):
+    return _Param(name, related_name, default, type, lookup, many, separator, validators, validator_classes)
 
 
 class _Param(object):
-    def __init__(self, name, default, type, lookup, many, separator, validators, validator_classes):
+    def __init__(self, name, related_name, default, type, lookup, many, separator, validators, validator_classes):
         self.name = name
+        self.related_name = related_name if related_name else name
         self.default = default
         self.type = type
         self.lookup = lookup
@@ -96,7 +97,7 @@ class _Param(object):
         except Exception as e:
             raise ValidationError('Type Convert error: %s' % e.message)
 
-        kwargs[self.name] = converted_value
+        kwargs[self.related_name] = converted_value
 
 
 GET = partial(param, lookup=_get_lookup)

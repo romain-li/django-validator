@@ -145,6 +145,16 @@ class DecoratorTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.test(view, get={'a': '1|a'})
 
+    def test_related_name(self):
+        @param('a', related_name='b', type='int', default=[1], many=True, separator='|')
+        def view(request, b):
+            return b
+
+        self.assertEquals(self.test(view, get={}), [1])
+        self.assertEquals(self.test(view, get={'a': '1|2'}), [1, 2])
+        with self.assertRaises(ValidationError):
+            self.test(view, get={'a': '1|a'})
+
 
 class ValidatorTest(unittest.TestCase):
     """
