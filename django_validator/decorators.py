@@ -5,7 +5,7 @@ from django_validator.exceptions import ValidationError
 from django_validator.validators import ValidatorRegistry
 
 
-def _get_lookup(request, name, default):
+def _get_lookup(request, name, default, kwargs):
     # Try to be compatible with older django rest framework.
     if hasattr(request, 'query_params'):
         return request.query_params.get(name, default)
@@ -13,20 +13,31 @@ def _get_lookup(request, name, default):
         return request.GET.get(name, default)
 
 
-def _post_lookup(request, name, default):
+def _post_lookup(request, name, default, kwargs):
     if hasattr(request, 'data'):
         return request.data.get(name, default)
     else:
         return request.DATA.get(name, default)
 
 
-def _post_or_get_lookup(request, name, default):
+def _post_or_get_lookup(request, name, default, kwargs):
     if hasattr(request, 'data'):
-        value = request.data.get('name')
-        return value if value is not None else _get_lookup(request, name, default)
+        value = request.data.get(name)
+        return value if value is not None else _get_lookup(request, name, default, kwargs)
     else:
         value = request.DATA.get(name)
-        return value if value is not None else _get_lookup(request, name, default)
+        return value if value is not None else _get_lookup(request, name, default, kwargs)
+
+
+def _header_lookup(request, name, default, kwargs):
+    if request is not None and hasattr(request, 'META'):
+        return request.META.get(name, default)
+    else:
+        return default
+
+
+def _uri_lookup(request, name, default, kwargs):
+    return kwargs.get(name, default)
 
 
 def param(name, related_name=None, default=None, type='string', lookup=_get_lookup, many=False, separator=',',
@@ -82,7 +93,7 @@ class _Param(object):
 
     def _parse(self, request, kwargs):
         converter = ConverterRegistry.get(self.type)
-        value = self.lookup(request, self.name, self.default)
+        value = self.lookup(request, self.name, self.default, kwargs)
         try:
             if self.many:
                 if isinstance(value, str):
@@ -103,3 +114,5 @@ class _Param(object):
 GET = partial(param, lookup=_get_lookup)
 POST = partial(param, lookup=_post_lookup)
 POST_OR_GET = partial(param, lookup=_post_or_get_lookup)
+HEADER = partial(param, lookup=_header_lookup)
+URI = partial(param, lookup=_uri_lookup)

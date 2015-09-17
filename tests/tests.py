@@ -2,15 +2,20 @@ import unittest
 from django.http import HttpRequest
 from rest_framework import generics
 from django_validator.converters import ConverterRegistry, BaseConverter
-from django_validator.decorators import param, GET, POST
+from django_validator.decorators import param, GET, POST, POST_OR_GET, HEADER, URI
 from django_validator.validators import *
 
 
 class FakeRequest(HttpRequest):
-    def __init__(self, method='GET', get=None, post=None):
+    def __init__(self, method='GET', get=None, post=None, header=None, drf_version=3):
         super(FakeRequest, self).__init__()
-        self.query_params = self._param_to_string(get or {})
-        self.data = self._param_to_string(post or {})
+        if drf_version >= 3:
+            self.query_params = self._param_to_string(get or {})
+            self.data = self._param_to_string(post or {})
+        else:
+            self.GET = self._param_to_string(get or {})
+            self.DATA = self._param_to_string(post or {})
+        self.META = self._param_to_string(header or {})
         self.method = method
 
     @staticmethod
@@ -29,11 +34,11 @@ class FakeRequest(HttpRequest):
         return cls(**kwargs)
 
     @classmethod
-    def test(cls, func, **kwargs):
+    def test(cls, func, drf_version=3, **kwargs):
         """
         Create a fake request and perform the view function.
         """
-        return func(cls.create(**kwargs))
+        return func(cls.create(drf_version=drf_version, **kwargs))
 
 
 class ConverterTest(unittest.TestCase):
@@ -154,6 +159,36 @@ class DecoratorTest(unittest.TestCase):
         self.assertEquals(self.test(view, get={'a': '1|2'}), [1, 2])
         with self.assertRaises(ValidationError):
             self.test(view, get={'a': '1|a'})
+
+    def test_post_or_get(self):
+        @POST_OR_GET('a', type='int', default=0)
+        def view(request, a):
+            return a
+
+        self.assertEquals(self.test(view, get={'a': 1}), 1)
+        self.assertEquals(self.test(view, post={'a': 1}), 1)
+        self.assertEquals(self.test(view), 0)
+        self.assertEquals(self.test(view, get={'a': 1}, drf_version=2), 1)
+        self.assertEquals(self.test(view, post={'a': 1}, drf_version=2), 1)
+        self.assertEquals(self.test(view, drf_version=2), 0)
+
+    def test_header(self):
+        @HEADER('a', type='int', default=0)
+        def view(request, a):
+            return a
+
+        self.assertEquals(self.test(view, header={'a': 1}), 1)
+        self.assertEquals(self.test(view, header={'a': 1}, drf_version=2), 1)
+        self.assertEquals(self.test(view), 0)
+        self.assertEquals(self.test(view, drf_version=2), 0)
+
+    def test_uri(self):
+        @URI('a', type='int', default=0)
+        def view(request, a):
+            return a
+
+        self.assertEquals(view(FakeRequest.create(), a=1), 1)
+        self.assertEquals(view(FakeRequest.create(), a='1'), 1)
 
 
 class ValidatorTest(unittest.TestCase):

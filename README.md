@@ -28,7 +28,36 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 @POST('phone', validators='required | regex: \d{11}', validator_classes=[PhoneNumberValidator()])
 ```
 
-### TODO List
+
+## Decorators
+- GET
+- POST
+- POST_OR_GET
+- HEADER
+- URI
+
+## types
+- str, string
+- int, integer
+- float
+- bool, boolean
+
+## validators
+- required
+- required_with
+- required_without
+- required_if
+- max
+- min
+- between
+- regex
+- integer
+- numeric
+- in
+- not_in
+
+
+## TODO List
 
 - [x] Base decorator
 - [x] Default value
