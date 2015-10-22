@@ -56,6 +56,8 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 - in
 - not_in
 
+## Run tests
+./manage.py test
 
 ## TODO List
 
