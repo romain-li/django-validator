@@ -16,17 +16,20 @@ def _get_lookup(request, name, default, kwargs):
 def _post_lookup(request, name, default, kwargs):
     if hasattr(request, 'data'):
         return request.data.get(name, default)
-    else:
+    elif hasattr(request, 'DATA'):
         return request.DATA.get(name, default)
+    else:
+        return request.POST.get(name, default)
 
 
 def _post_or_get_lookup(request, name, default, kwargs):
     if hasattr(request, 'data'):
         value = request.data.get(name)
-        return value if value is not None else _get_lookup(request, name, default, kwargs)
-    else:
+    elif hasattr(request, 'DATA'):
         value = request.DATA.get(name)
-        return value if value is not None else _get_lookup(request, name, default, kwargs)
+    else:
+        value = request.POST.get(name)
+    return value if value is not None else _get_lookup(request, name, default, kwargs)
 
 
 def _header_lookup(request, name, default, kwargs):
