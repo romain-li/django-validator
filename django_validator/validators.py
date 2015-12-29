@@ -127,7 +127,7 @@ class RequiredValidator(BaseValidator):
     def required_valid(value):
         if value is None:
             return False
-        elif isinstance(value, str) and value.strip() == '':
+        elif isinstance(value, basestring) and value.strip() == '':
             return False
         return True
 
