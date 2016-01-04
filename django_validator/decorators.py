@@ -1,5 +1,6 @@
 from functools import wraps, partial
 import rest_framework.views
+from rest_framework.request import Request
 from django_validator.converters import ConverterRegistry
 from django_validator.exceptions import ValidationError
 from django_validator.validators import ValidatorRegistry
@@ -78,7 +79,12 @@ class _Param(object):
             if isinstance(args[0], rest_framework.views.APIView):
                 request = args[0].request
             else:
-                request = args[0]
+                for arg in args:
+                    if isinstance(arg, (Request, HttpRequest)):
+                        request = arg
+                        break
+                else:
+                    request = args[0]
 
             if request:
                 # Checkout all the params first.
