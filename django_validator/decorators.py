@@ -1,5 +1,6 @@
 from functools import wraps, partial
 import rest_framework.views
+from django.http import HttpRequest
 from rest_framework.request import Request
 from django_validator.converters import ConverterRegistry
 from django_validator.exceptions import ValidationError
