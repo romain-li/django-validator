@@ -1,5 +1,14 @@
 language: python
+branches:
+  only:
+   - master
+
 python:
  - "2.7"
 
-install: "pip install -q -r requirements/test.txt"
+install:
+ - pip install -q -r requirements/test.txt
+
+script:
+ - pep8 .
+ - scripts/test.sh

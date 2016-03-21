@@ -6,7 +6,7 @@ And also support normal django view functions.
 ## Usage:
 
 ### Use default decorators and validators
-```
+```python
 @GET('check_phone_type', type='int', validators='required | in: 1,2,3')
 @POST('phone', validators='required | regex: \d{11}')
 @POST('token', validators='required')
@@ -15,7 +15,7 @@ def post(request, check_phone_type, phone, token):
 ```
 
 ### Custom validator
-```
+```python
 class PhoneNumberValidator(BaseValidator):
     def is_valid(self, value, params):
         return True
@@ -57,19 +57,7 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 - not_in
 
 ## Run tests
-./manage.py test
+scripts/test.sh
 
 ## TODO List
-
-- [x] Base decorator
-- [x] Default value
-- [x] Type converter
-- [x] Lookup param, and be compatible with older version of django-rest-framework
-- [x] Many and separator param
-- [x] Validators
-- [x] Custom type converter
-- [x] Custom validators
-- [x] Custom validator messages
-- [ ] Auto output API documents or function document
-- [x] Tests
 - [ ] Be compatible with django framework, not django-rest-framework.

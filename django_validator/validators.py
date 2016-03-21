@@ -89,7 +89,9 @@ class BaseValidator(object):
     code = 'base_validator'
     message = _('The {key} is invalid.')
     nullable = True
-    clean = lambda self, x: x
+
+    def clean(self, value):
+        return value
 
     def __init__(self, message=None):
         if message:
