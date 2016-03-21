@@ -1,7 +1,13 @@
-# django-validator
+# django-validator ![Travis-CI](https://travis-ci.org/romain-li/django-validator.svg)
 
 A django-rest-framework tools for validate and extract param from request.
 And also support normal django view functions.
+
+## Install:
+
+```bash
+pip install django_validator
+```
 
 ## Usage:
 
