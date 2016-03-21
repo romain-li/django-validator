@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="django_validator",
-    version="0.1.2",
+    version="0.2.0",
     packages=[
         "django_validator",
     ],

@@ -1,4 +1,26 @@
-from django_validator.validators import IntegerValidator, NumericValidator
+"""Module that provides the default converters and converter registry.
+
+Converters will be auto registered in the ConverterRegistry like Django Model.
+If you haven't specify the name attribute in Meta class, registry will auto use the class name.
+
+Example:
+    class ConverterExample(BaseConverter):
+
+        @staticmethod
+        def convert(key, string):
+            pass
+
+        class Meta:
+            name = ('example', )
+
+But if you can't auto import the converter class, you can register the converter manually.
+
+Example:
+    ConverterExample.register()
+    ConverterExample.register('example')
+"""
+
+from .validators import IntegerValidator, NumericValidator
 
 
 class ConverterRegistry(object):
@@ -9,16 +31,17 @@ class ConverterRegistry(object):
 
     @classmethod
     def register(cls, name, _class):
+        """Register Converter in ConverterRegistry.
+
+        Args:
+            name (str, iterable): Register key or name tuple.
+            _class (BaseConverter): Converter class.
         """
-        Register Converter in ConverterRegistry.
-        :param name: Register key or name tuple.
-        :param _class: Converter class.
-        """
-        if isinstance(name, str):
-            cls._registry[name] = _class
-        else:
+        if hasattr(name, '__iter__'):
             for _name in name:
                 cls._registry[_name] = _class
+        else:
+            cls._registry[name] = _class
 
     @classmethod
     def get(cls, name):
@@ -52,16 +75,32 @@ class BaseConverter(object):
 
     @classmethod
     def register(cls, name=None):
+        """Register this converter to registry.
+
+        Attributes:
+            name (Optinal[str, iterable]): Name that used to register in registry.
+                Defaults to the name in Meta class.
+        """
         if name is None:
             attr_meta = getattr(cls, 'Meta', None)
             name = getattr(attr_meta, 'name', cls.__name__)
         ConverterRegistry.register(name, cls)
 
     class Meta:
+        """Meta class of Converter
+
+        Attributes:
+            abstract (bool): Class will not auto register if this attribute is True.
+            name (Optional[str, iterable]): Name that used to auto register in registry.
+        """
         abstract = True
 
 
 class StringConverter(BaseConverter):
+    """
+    Converter that just passing the value.
+    """
+
     @staticmethod
     def convert(key, string):
         return string
@@ -71,6 +110,9 @@ class StringConverter(BaseConverter):
 
 
 class IntegerConverter(BaseConverter):
+    """
+    Convert the value to an integer value.
+    """
     integer_validator = IntegerValidator()
 
     @staticmethod
@@ -85,6 +127,9 @@ class IntegerConverter(BaseConverter):
 
 
 class FloatConverter(BaseConverter):
+    """
+    Convert the value to a float value.
+    """
     numeric_validator = NumericValidator()
 
     @staticmethod

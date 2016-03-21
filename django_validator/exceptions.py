@@ -1,8 +1,12 @@
-from rest_framework import status
-import rest_framework.exceptions
+from django.core.exceptions import ValidationError as DjangoValidationError
+
+from . import status
 
 
-class ValidationError(rest_framework.exceptions.APIException):
+class ValidationError(DjangoValidationError):
+    """
+    Validation Error
+    """
     code = ''
 
     def __init__(self, detail, code=None, status_code=status.HTTP_400_BAD_REQUEST):

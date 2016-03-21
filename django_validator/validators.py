@@ -1,17 +1,13 @@
-"""
-Validators to check if the params is valid.
+"""Module that provides the default validators and validator registry.
 
-Use ValidatorRegistry to register or get validator from registry,
-and parse validator from string.
-
-Inherit BaseValidator to implement your custom validators.
+Inherit BaseValidator to implement the custom validators.
 """
 import re
 
 from django.utils.translation import ugettext_lazy as _
-from rest_framework import status
 
-from django_validator.exceptions import ValidationError
+from . import status
+from .exceptions import ValidationError
 
 
 class ValidatorRegistry(object):
@@ -24,16 +20,17 @@ class ValidatorRegistry(object):
 
     @classmethod
     def register(cls, name, _class):
+        """Register Converter in ConverterRegistry.
+
+        Args:
+            name (str, iterable): Register key or name tuple.
+            _class (BaseConverter): Validator class.
         """
-        Register Validator in ValidatorRegistry.
-        :param name: Register key or name tuple.
-        :param _class: Validator class.
-        """
-        if isinstance(name, str):
-            cls._registry[name] = _class
-        else:
+        if hasattr(name, '__iter__'):
             for _name in name:
                 cls._registry[_name] = _class
+        else:
+            cls._registry[name] = _class
 
     @classmethod
     def get(cls, name):
@@ -41,6 +38,17 @@ class ValidatorRegistry(object):
 
     @classmethod
     def get_validators(cls, validator_str):
+        """Converter a validator string to a list of validator instances.
+
+        Args:
+            validator_str (str):
+
+        Returns:
+            List[BaseValidator]: A list of validator instances.
+
+        Raises:
+            TODO: Determine a special error.
+        """
         validators = []
         if not validator_str:
             return validators
@@ -204,7 +212,7 @@ class MinValidator(BaseValidator):
         self.min_value = int(min_value)
 
     def is_valid(self, value, params):
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             self.message = _('The {{key}} must be at least {min} characters.').format(min=self.min_value)
             return len(value) >= self.min_value
         else:
@@ -223,7 +231,7 @@ class MaxValidator(BaseValidator):
         self.max_value = int(max_value)
 
     def is_valid(self, value, params):
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             self.message = _('The {{key}} may not be greater than {max} characters.').format(max=self.max_value)
             return len(value) <= self.max_value
         else:
@@ -243,7 +251,7 @@ class BetweenValidator(BaseValidator):
         self.max_value = int(max_value)
 
     def is_valid(self, value, params):
-        if isinstance(value, str):
+        if isinstance(value, basestring):
             self.message = _('The {{key}} must be between {min} and {max} characters.').format(
                 min=self.min_value,
                 max=self.max_value

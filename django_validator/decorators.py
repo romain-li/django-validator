@@ -1,10 +1,20 @@
 from functools import wraps, partial
-import rest_framework.views
+
 from django.http import HttpRequest
-from rest_framework.request import Request
-from django_validator.converters import ConverterRegistry
-from django_validator.exceptions import ValidationError
-from django_validator.validators import ValidatorRegistry
+from django.views.generic import View
+
+try:
+    from rest_framework.request import Request as RestRequest
+except ImportError:
+    class RestRequest(object):
+        """
+        Fake class for rest_framework
+        """
+        pass
+
+from .converters import ConverterRegistry
+from .exceptions import ValidationError
+from .validators import ValidatorRegistry
 
 
 def _get_lookup(request, name, default, kwargs):
@@ -25,12 +35,7 @@ def _post_lookup(request, name, default, kwargs):
 
 
 def _post_or_get_lookup(request, name, default, kwargs):
-    if hasattr(request, 'data'):
-        value = request.data.get(name)
-    elif hasattr(request, 'DATA'):
-        value = request.DATA.get(name)
-    else:
-        value = request.POST.get(name)
+    value = _post_lookup(request, name, None, kwargs)
     return value if value is not None else _get_lookup(request, name, default, kwargs)
 
 
@@ -73,15 +78,17 @@ class _Param(object):
 
         @wraps(func)
         def _decorator(*args, **kwargs):
+            # TODO: Remove rest_framework absolute imports
             if len(args) < 1:
                 # Call function immediately, maybe raise an error is better.
                 return func(*args, **kwargs)
 
-            if isinstance(args[0], rest_framework.views.APIView):
+            if isinstance(args[0], View):
                 request = args[0].request
             else:
+                # Find the first request object
                 for arg in args:
-                    if isinstance(arg, (Request, HttpRequest)):
+                    if isinstance(arg, (RestRequest, HttpRequest)):
                         request = arg
                         break
                 else:

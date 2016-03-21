@@ -4,3 +4,6 @@ __pycache__/
 
 # PyCharm config files
 .idea
+
+# MacOS system file
+.DS_STORE

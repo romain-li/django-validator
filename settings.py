@@ -1,2 +1,0 @@
-USE_18N = False
-SECRET_KEY = 'TEST'
