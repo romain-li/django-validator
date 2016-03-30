@@ -97,13 +97,15 @@ class BaseValidator(object):
         if message:
             self.message = message
 
-    def __call__(self, key, params):
+    def __call__(self, key, params, verbose_key=None):
         value = params.get(key)
         if value is None and self.nullable:
             return True
+        if verbose_key is None:
+            verbose_key = key
 
         cleaned = self.clean(value)
-        message_params = {'show_value': cleaned, 'value': value, 'key': key}
+        message_params = {'show_value': cleaned, 'value': value, 'key': verbose_key}
         if not self.is_valid(cleaned, params):
             raise ValidationError(self.message.format(**message_params), self.code, self.status_code)
         return True

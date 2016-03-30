@@ -11,8 +11,8 @@ class ValidatorTest(TestCase):
     """
 
     @staticmethod
-    def _validator(validator, value, other=None):
-        return validator('test', {'test': value, 'other': other})
+    def _validator(validator, value, other=None, verbose_key=None):
+        return validator('test', {'test': value, 'other': other}, verbose_key)
 
     @ddt.data(
         ('required', RequiredValidator),
@@ -142,3 +142,9 @@ class ValidatorTest(TestCase):
             self.assertTrue(self._validator(validator, value, other))
         else:
             self.assertRaises(ValidationError, self._validator, validator, value, other)
+
+    def test_verbose_key(self):
+        """ Test if the verbose key can throw from the validation error. """
+        validator = RequiredValidator()
+        self.assertRaisesRegexp(ValidationError, 'TEST_VERBOSE_KEY', self._validator, validator,
+                                None, verbose_key='TEST_VERBOSE_KEY')

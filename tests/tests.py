@@ -100,6 +100,16 @@ class DecoratorTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             self.test(view, get={'a': '1|a'})
 
+    def test_verbose_name(self):
+        @param('a', verbose_name='b', type='int', default=[1], many=True, separator='|')
+        def view(request, a):
+            return a
+
+        self.assertEquals(self.test(view, get={}), [1])
+        self.assertEquals(self.test(view, get={'a': '1|2'}), [1, 2])
+        with self.assertRaisesRegexp(ValidationError, 'b'):
+            self.test(view, get={'a': '1|a'})
+
     def test_post_or_get(self):
         @POST_OR_GET('a', type='int', default=0)
         def view(request, a):

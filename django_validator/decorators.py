@@ -50,15 +50,18 @@ def _uri_lookup(request, name, default, kwargs):
     return kwargs.get(name, default)
 
 
-def param(name, related_name=None, default=None, type='string', lookup=_get_lookup, many=False, separator=',',
-          validators=None, validator_classes=None):
-    return _Param(name, related_name, default, type, lookup, many, separator, validators, validator_classes)
+def param(name, related_name=None, verbose_name=None, default=None, type='string', lookup=_get_lookup, many=False,
+          separator=',', validators=None, validator_classes=None):
+    return _Param(name, related_name, verbose_name, default, type, lookup, many, separator, validators,
+                  validator_classes)
 
 
 class _Param(object):
-    def __init__(self, name, related_name, default, type, lookup, many, separator, validators, validator_classes):
+    def __init__(self, name, related_name, verbose_name, default, type, lookup, many, separator, validators,
+                 validator_classes):
         self.name = name
         self.related_name = related_name if related_name else name
+        self.verbose_name = verbose_name if verbose_name else name
         self.default = default
         self.type = type
         self.lookup = lookup
@@ -101,7 +104,7 @@ class _Param(object):
                 # Validate after all the params has checked out, because some validators needs all the params.
                 for _param in _decorator.__params__:
                     for validator in _param.validators:
-                        validator(_param.name, kwargs)
+                        validator(_param.name, kwargs, _param.verbose_name)
 
             return func(*args, **kwargs)
 

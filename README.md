@@ -42,13 +42,27 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 - HEADER
 - URI
 
-## types
+
+def param(name, related_name=None, verbose_name=None, default=None, type='string', lookup=_get_lookup, many=False,
+          separator=',', validators=None, validator_classes=None):
+
+## Params for decorator
+- name: The key of param in the request.
+- related_name: The key of param to pass throw the function. Default is equals to name.
+- verbose_name: The key for display in the validation error message. Default is equals to name.
+- default: Default value for the param. Default is `None`.
+- type: Auto check and convert the param type. Default is string.
+- many: Convert the param to a list if set to `True`.
+- separator: If set many to `True`, use this value to split the param.
+- validators: String format validator, like `required | max: 1`.
+
+## Default types
 - str, string
 - int, integer
 - float
 - bool, boolean
 
-## validators
+## Default validators
 - required
 - required_with
 - required_without
