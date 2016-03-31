@@ -42,10 +42,6 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 - HEADER
 - URI
 
-
-def param(name, related_name=None, verbose_name=None, default=None, type='string', lookup=_get_lookup, many=False,
-          separator=',', validators=None, validator_classes=None):
-
 ## Params for decorator
 - name: The key of param in the request.
 - related_name: The key of param to pass throw the function. Default is equals to name.
