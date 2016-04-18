@@ -39,6 +39,7 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 - GET
 - POST
 - POST_OR_GET
+- FILE
 - HEADER
 - URI
 
@@ -71,6 +72,8 @@ ValidatorRegistry.register('phone_number_validator', PhoneNumberValidator)
 - numeric
 - in
 - not_in
+- ext_in
+- ext_not_in
 
 ## Run tests
 scripts/test.sh
