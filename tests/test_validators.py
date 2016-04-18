@@ -1,4 +1,5 @@
 import ddt
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from django_validator.validators import *
@@ -71,15 +72,18 @@ class ValidatorTest(TestCase):
         (MaxValidator(10), True, 't' * 10),
         (MaxValidator(10), False, 11),
         (MaxValidator(10), False, 't' * 11),
+        (MaxValidator(10), True, SimpleUploadedFile('test', 'test')),
+        (MaxValidator(10), False, SimpleUploadedFile('test', 't' * 11)),
         # Min
         (MinValidator(10), True, None),
         (MinValidator(10), True, 10),
         (MinValidator(10), True, 20),
         (MinValidator(10), True, 't' * 10),
         (MinValidator(10), True, 't' * 20),
-        (MinValidator(10), True, 't' * 20),
         (MinValidator(10), False, 5),
         (MinValidator(10), False, 'test'),
+        (MinValidator(10), True, SimpleUploadedFile('test', 't' * 10)),
+        (MinValidator(10), False, SimpleUploadedFile('test', 'test')),
         # Between
         (BetweenValidator(5, 10), True, None),
         (BetweenValidator(5, 10), True, 5),
@@ -92,6 +96,9 @@ class ValidatorTest(TestCase):
         (BetweenValidator(5, 10), False, 20),
         (BetweenValidator(5, 10), False, 'test'),
         (BetweenValidator(5, 10), False, 't' * 20),
+        (BetweenValidator(5, 10), True, SimpleUploadedFile('test', 't' * 10)),
+        (BetweenValidator(5, 10), False, SimpleUploadedFile('test', 'test')),
+        (BetweenValidator(5, 10), False, SimpleUploadedFile('test', 't' * 20)),
         # Regex
         (RegexValidator('^\w+$'), True, None),
         (RegexValidator('^\w+$'), True, 'abc'),
@@ -135,6 +142,14 @@ class ValidatorTest(TestCase):
         (NotInValidator('1', '2', '3'), False, '1'),
         (NotInValidator('1', '2', '3'), False, 2),
         (NotInValidator('1', '2', '3'), False, 3),
+        # Ext in
+        (ExtInValidator('jpg', 'jpeg'), True, SimpleUploadedFile('test.jpg', None)),
+        (ExtInValidator('.jpg', '.jpeg'), True, SimpleUploadedFile('test.jpg', None)),
+        (ExtInValidator('jpg', 'jpeg'), False, SimpleUploadedFile('test.png', None)),
+        # Ext not in
+        (ExtNotInValidator('jpg', 'jpeg'), True, SimpleUploadedFile('test.png', None)),
+        (ExtNotInValidator('jpg', 'jpeg'), False, SimpleUploadedFile('test.jpg', None)),
+        (ExtNotInValidator('.jpg', '.jpeg'), False, SimpleUploadedFile('test.jpg', None)),
     )
     @ddt.unpack
     def test_validator(self, validator, valid, value, other=None):

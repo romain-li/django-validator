@@ -34,6 +34,13 @@ def _post_lookup(request, name, default, kwargs):
         return request.POST.get(name, default)
 
 
+def _file_lookup(request, name, default, kwargs):
+    if hasattr(request, 'data'):
+        return request.data.get(name, default)
+    else:
+        return request.FILES.get(name, default)
+
+
 def _post_or_get_lookup(request, name, default, kwargs):
     value = _post_lookup(request, name, None, kwargs)
     return value if value is not None else _get_lookup(request, name, default, kwargs)
@@ -81,7 +88,6 @@ class _Param(object):
 
         @wraps(func)
         def _decorator(*args, **kwargs):
-            # TODO: Remove rest_framework absolute imports
             if len(args) < 1:
                 # Call function immediately, maybe raise an error is better.
                 return func(*args, **kwargs)
@@ -116,7 +122,7 @@ class _Param(object):
         value = self.lookup(request, self.name, self.default, kwargs)
         try:
             if self.many:
-                if isinstance(value, str):
+                if isinstance(value, basestring):
                     values = value.split(self.separator)
                 else:
                     values = value
@@ -133,6 +139,7 @@ class _Param(object):
 
 GET = partial(param, lookup=_get_lookup)
 POST = partial(param, lookup=_post_lookup)
+FILE = partial(param, type='file', lookup=_file_lookup)
 POST_OR_GET = partial(param, lookup=_post_or_get_lookup)
 HEADER = partial(param, lookup=_header_lookup)
 URI = partial(param, lookup=_uri_lookup)

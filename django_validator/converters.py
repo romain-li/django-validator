@@ -157,3 +157,16 @@ class BooleanConverter(BaseConverter):
 
     class Meta:
         name = ('boolean', 'bool')
+
+
+class FileConverter(BaseConverter):
+    """
+    Pass the file object.
+    """
+
+    @staticmethod
+    def convert(key, value):
+        return value
+
+    class Meta:
+        name = ('file',)

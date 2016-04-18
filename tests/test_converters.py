@@ -28,7 +28,7 @@ class ConverterTests(TestCase):
 
     def test_auto_register(self):
         """
-        Test auto register for converters
+        Test auto register for converters.
         """
 
         class TestConverter(BaseConverter):

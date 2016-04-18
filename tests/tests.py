@@ -1,8 +1,8 @@
 import unittest
+
 from django.http import HttpRequest
-from rest_framework import generics
-from django_validator.converters import ConverterRegistry, BaseConverter
-from django_validator.decorators import param, GET, POST, POST_OR_GET, HEADER, URI
+
+from django_validator.decorators import GET, POST
 from django_validator.validators import *
 
 
@@ -39,106 +39,6 @@ class FakeRequest(HttpRequest):
         Create a fake request and perform the view function.
         """
         return func(cls.create(drf_version=drf_version, **kwargs))
-
-
-class DecoratorTest(unittest.TestCase):
-    """
-    Test cases for decorators.
-    """
-
-    def setUp(self):
-        self.test = FakeRequest.test
-
-    def test_decorator(self):
-        @param('a')
-        def view(request, a):
-            self.assertEqual(a, 'a')
-
-        self.test(view, get={'a': 'a'})
-
-        class ModelView(generics.RetrieveAPIView):
-            @param('a')
-            def filter_queryset(self, queryset, a):
-                return a
-
-        model_view = ModelView()
-        model_view.request = FakeRequest.create(get={'a': 'a'})
-        self.assertEquals(model_view.filter_queryset(None), 'a')
-
-    def test_default(self):
-        # Test param with default value
-        @param('a', default='default')
-        def view_with_default(request, a):
-            self.assertEqual(a, 'default')
-
-        self.test(view_with_default, get={})
-
-        # Test param without default value
-        @param('a')
-        def view_without_default(request, a):
-            self.assertIsNone(a)
-
-        self.test(view_without_default, get={})
-
-    def test_many(self):
-        @param('a', type='int', default=[1], many=True, separator='|')
-        def view(request, a):
-            return a
-
-        self.assertEquals(self.test(view, get={}), [1])
-        self.assertEquals(self.test(view, get={'a': '1|2'}), [1, 2])
-        with self.assertRaises(ValidationError):
-            self.test(view, get={'a': '1|a'})
-
-    def test_related_name(self):
-        @param('a', related_name='b', type='int', default=[1], many=True, separator='|')
-        def view(request, b):
-            return b
-
-        self.assertEquals(self.test(view, get={}), [1])
-        self.assertEquals(self.test(view, get={'a': '1|2'}), [1, 2])
-        with self.assertRaises(ValidationError):
-            self.test(view, get={'a': '1|a'})
-
-    def test_verbose_name(self):
-        @param('a', verbose_name='b', type='int', default=[1], many=True, separator='|')
-        def view(request, a):
-            return a
-
-        self.assertEquals(self.test(view, get={}), [1])
-        self.assertEquals(self.test(view, get={'a': '1|2'}), [1, 2])
-        with self.assertRaisesRegexp(ValidationError, 'b'):
-            self.test(view, get={'a': '1|a'})
-
-    def test_post_or_get(self):
-        @POST_OR_GET('a', type='int', default=0)
-        def view(request, a):
-            return a
-
-        self.assertEquals(self.test(view, get={'a': 1}), 1)
-        self.assertEquals(self.test(view, post={'a': 1}), 1)
-        self.assertEquals(self.test(view), 0)
-        self.assertEquals(self.test(view, get={'a': 1}, drf_version=2), 1)
-        self.assertEquals(self.test(view, post={'a': 1}, drf_version=2), 1)
-        self.assertEquals(self.test(view, drf_version=2), 0)
-
-    def test_header(self):
-        @HEADER('a', type='int', default=0)
-        def view(request, a):
-            return a
-
-        self.assertEquals(self.test(view, header={'a': 1}), 1)
-        self.assertEquals(self.test(view, header={'a': 1}, drf_version=2), 1)
-        self.assertEquals(self.test(view), 0)
-        self.assertEquals(self.test(view, drf_version=2), 0)
-
-    def test_uri(self):
-        @URI('a', type='int', default=0)
-        def view(request, a):
-            return a
-
-        self.assertEquals(view(FakeRequest.create(), a=1), 1)
-        self.assertEquals(view(FakeRequest.create(), a='1'), 1)
 
 
 class UsageTest(unittest.TestCase):
