@@ -30,6 +30,15 @@ class DecoratorTest(TestCase):
 
         self.get(view, data={'a': 'a'})
 
+    def test_multiple_in(self):
+        @param('a', validators='in: a, b')
+        def view(request, a):
+            self.assertIn(a, ('a'))
+
+        self.get(view, data={'a': 'a'})
+        self.get(view, data={'a': 'a'})
+        self.get(view, data={'a': 'a'})
+
     def test_default(self):
         """
         Test decorator with default param.

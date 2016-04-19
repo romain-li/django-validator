@@ -343,7 +343,7 @@ class InValidator(BaseValidator):
 
     def __init__(self, *choices):
         super(InValidator, self).__init__()
-        self.choices = (choice.lower() for choice in choices)
+        self.choices = {choice.lower() for choice in choices}
 
     def clean(self, value):
         if value is None:
@@ -373,8 +373,8 @@ class ExtInValidator(BaseValidator):
 
     def __init__(self, *choices):
         super(ExtInValidator, self).__init__()
-        choices = (choice.lower() for choice in choices)
-        self.choices = (choice if choice.startswith('.') else '.' + choice for choice in choices)
+        choices = [choice.lower() for choice in choices]
+        self.choices = {choice if choice.startswith('.') else '.' + choice for choice in choices}
 
     def clean(self, value):
         _, ext = os.path.splitext(value.name)
