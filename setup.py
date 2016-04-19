@@ -1,4 +1,5 @@
 from setuptools import setup
+import django_validator
 
 setup(
     name="django_validator",
@@ -6,7 +7,7 @@ setup(
     author="romain_li",
     author_email="romain_li@163.com",
     url="https://github.com/romain-li/django-validator",
-    version="0.2.1",
+    version=django_validator.VERSION,
     packages=[
         "django_validator",
     ],

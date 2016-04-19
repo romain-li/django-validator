@@ -2,8 +2,10 @@
 
 Inherit BaseValidator to implement the custom validators.
 """
+import os
 import re
 
+from django.core.files.base import File
 from django.utils.translation import ugettext_lazy as _
 
 from . import status
@@ -219,6 +221,9 @@ class MinValidator(BaseValidator):
         if isinstance(value, basestring):
             self.message = _('The {{key}} must be at least {min} characters.').format(min=self.min_value)
             return len(value) >= self.min_value
+        elif isinstance(value, File):
+            self.message = _('The {{key}} must be at least {min} bytes.'.format(min=self.min_value))
+            return value.size >= self.min_value
         else:
             self.message = _('The {{key}} must be at least {min}.').format(min=self.min_value)
             return value >= self.min_value
@@ -238,6 +243,9 @@ class MaxValidator(BaseValidator):
         if isinstance(value, basestring):
             self.message = _('The {{key}} may not be greater than {max} characters.').format(max=self.max_value)
             return len(value) <= self.max_value
+        elif isinstance(value, File):
+            self.message = _('The {{key}} must not be at greater {max} bytes.'.format(max=self.max_value))
+            return value.size <= self.max_value
         else:
             self.message = _('The {{key}} may not be greater than {max}.').format(max=self.max_value)
             return value <= self.max_value
@@ -261,6 +269,12 @@ class BetweenValidator(BaseValidator):
                 max=self.max_value
             )
             return self.min_value <= len(value) <= self.max_value
+        elif isinstance(value, File):
+            self.message = _('The {{key}} must be between {min} and {max} bytes.').format(
+                min=self.min_value,
+                max=self.max_value
+            )
+            return self.min_value <= value.size <= self.max_value
         else:
             self.message = _('The {{key}} must be between {min} and {max}.').format(
                 min=self.min_value,
@@ -277,8 +291,7 @@ class BaseRegexValidator(BaseValidator):
     message = _('The {key} format is invalid.')
     regex = None
 
-    @staticmethod
-    def clean(value):
+    def clean(self, value):
         if value is None:
             return ''
         return str(value)
@@ -330,13 +343,12 @@ class InValidator(BaseValidator):
 
     def __init__(self, *choices):
         super(InValidator, self).__init__()
-        self.choices = choices
+        self.choices = (choice.lower() for choice in choices)
 
-    @staticmethod
-    def clean(value):
+    def clean(self, value):
         if value is None:
             return ''
-        return str(value)
+        return str(value).lower()
 
     def is_valid(self, value, params):
         return value in self.choices
@@ -347,6 +359,36 @@ class NotInValidator(InValidator):
     Check if the value is not in the choices list.
     """
     code = 'not_in_validator'
+
+    def is_valid(self, value, params):
+        return value not in self.choices
+
+
+class ExtInValidator(BaseValidator):
+    """
+    Check if the file extension type is in the choices list.
+    """
+    code = 'ext_in_validator'
+    message = _('The extension type of {key} is invalid.')
+
+    def __init__(self, *choices):
+        super(ExtInValidator, self).__init__()
+        choices = (choice.lower() for choice in choices)
+        self.choices = (choice if choice.startswith('.') else '.' + choice for choice in choices)
+
+    def clean(self, value):
+        _, ext = os.path.splitext(value.name)
+        return ext.lower()
+
+    def is_valid(self, value, params):
+        return value in self.choices
+
+
+class ExtNotInValidator(ExtInValidator):
+    """
+    Check if the file extension type is not in the choices list.
+    """
+    code = 'ext_not_in_validator'
 
     def is_valid(self, value, params):
         return value not in self.choices
@@ -365,3 +407,5 @@ ValidatorRegistry.register('integer', IntegerValidator)
 ValidatorRegistry.register('numeric', NumericValidator)
 ValidatorRegistry.register('in', InValidator)
 ValidatorRegistry.register('not_in', NotInValidator)
+ValidatorRegistry.register('ext_in', ExtInValidator)
+ValidatorRegistry.register('ext_not_in', ExtNotInValidator)
