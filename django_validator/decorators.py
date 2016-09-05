@@ -21,7 +21,7 @@ from .exceptions import ValidationError
 from .validators import ValidatorRegistry
 
 
-def _get_lookup(request, name, default, kwargs):
+def _get_lookup(request, name, default, kwargs, extra_kwargs):
     # Try to be compatible with older django rest framework.
     if hasattr(request, 'query_params'):
         return request.query_params.get(name, default)
@@ -29,7 +29,7 @@ def _get_lookup(request, name, default, kwargs):
         return request.GET.get(name, default)
 
 
-def _post_lookup(request, name, default, kwargs):
+def _post_lookup(request, name, default, kwargs, extra_kwargs):
     if hasattr(request, 'data'):
         return request.data.get(name, default)
     elif hasattr(request, 'DATA'):
@@ -38,27 +38,30 @@ def _post_lookup(request, name, default, kwargs):
         return request.POST.get(name, default)
 
 
-def _file_lookup(request, name, default, kwargs):
+def _file_lookup(request, name, default, kwargs, extra_kwargs):
     if hasattr(request, 'data'):
         return request.data.get(name, default)
     else:
         return request.FILES.get(name, default)
 
 
-def _post_or_get_lookup(request, name, default, kwargs):
-    value = _post_lookup(request, name, None, kwargs)
-    return value if value is not None else _get_lookup(request, name, default, kwargs)
+def _post_or_get_lookup(request, name, default, kwargs, extra_kwargs):
+    value = _post_lookup(request, name, None, kwargs, extra_kwargs)
+    return value if value is not None else _get_lookup(request, name, default, kwargs, extra_kwargs)
 
 
-def _header_lookup(request, name, default, kwargs):
+def _header_lookup(request, name, default, kwargs, extra_kwargs):
     if request is not None and hasattr(request, 'META'):
         return request.META.get(name, default)
     else:
         return default
 
 
-def _uri_lookup(request, name, default, kwargs):
-    return kwargs.get(name, default)
+def _uri_lookup(request, name, default, kwargs, extra_kwargs):
+    if name in kwargs:
+        return kwargs.get(name)
+    else:
+        return extra_kwargs.get(name, default)
 
 
 def param(name, related_name=None, verbose_name=None, default=None, type='string', lookup=_get_lookup, many=False,
@@ -96,13 +99,12 @@ class _Param(object):
                 # Call function immediately, maybe raise an error is better.
                 return func(*args, **kwargs)
 
+            extra_kwargs = None
             if isinstance(args[0], View):
                 request = args[0].request
                 # Update the kwargs from Django REST framework's APIView class
                 if isinstance(args[0], APIView):
-                    old_kwargs = kwargs
-                    kwargs = args[0].kwargs.copy()
-                    kwargs.update(old_kwargs)
+                    extra_kwargs = args[0].kwargs
 
             else:
                 # Find the first request object
@@ -116,7 +118,7 @@ class _Param(object):
             if request:
                 # Checkout all the params first.
                 for _param in _decorator.__params__:
-                    _param._parse(request, kwargs)
+                    _param._parse(request, kwargs, extra_kwargs)
                 # Validate after all the params has checked out, because some validators needs all the params.
                 for _param in _decorator.__params__:
                     for validator in _param.validators:
@@ -127,9 +129,9 @@ class _Param(object):
         _decorator.__params__ = [self]
         return _decorator
 
-    def _parse(self, request, kwargs):
+    def _parse(self, request, kwargs, extra_kwargs=None):
         converter = ConverterRegistry.get(self.type)
-        value = self.lookup(request, self.name, self.default, kwargs)
+        value = self.lookup(request, self.name, self.default, kwargs, extra_kwargs)
         try:
             if self.many:
                 if isinstance(value, basestring):
