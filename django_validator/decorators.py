@@ -5,11 +5,15 @@ from django.views.generic import View
 
 try:
     from rest_framework.request import Request as RestRequest
+    from rest_framework.views import APIView
 except ImportError:
+    """
+    Fake class for rest_framework
+    """
     class RestRequest(object):
-        """
-        Fake class for rest_framework
-        """
+        pass
+
+    class APIView(object):
         pass
 
 from .converters import ConverterRegistry
@@ -94,6 +98,12 @@ class _Param(object):
 
             if isinstance(args[0], View):
                 request = args[0].request
+                # Update the kwargs from Django REST framework's APIView class
+                if isinstance(args[0], APIView):
+                    old_kwargs = kwargs
+                    kwargs = args[0].kwargs.copy()
+                    kwargs.update(old_kwargs)
+
             else:
                 # Find the first request object
                 for arg in args:
