@@ -7,6 +7,7 @@ setup(
     author="romain_li",
     author_email="romain_li@163.com",
     url="https://github.com/romain-li/django-validator",
+    description="Django validator with decorators.",
     version=django_validator.VERSION,
     packages=[
         "django_validator",
