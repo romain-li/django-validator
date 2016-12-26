@@ -69,7 +69,7 @@ class DecoratorTest(TestCase):
             self.get(view, data={'a': '1|a'})
 
     def test_related_name(self):
-        @param('a', related_name='b', type='int', default=[1], many=True, separator='|')
+        @param('a', related_name='b', type='int', default=[1], many=True, separator='|', validators='required')
         def view(request, b):
             return b
 
