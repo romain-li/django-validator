@@ -68,6 +68,14 @@ class DecoratorTest(TestCase):
         with self.assertRaises(ValidationError):
             self.get(view, data={'a': '1|a'})
 
+    def test_many_without_default_value(self):
+        @param('a', many=True)
+        def view(request, a):
+            return a
+
+        self.assertEquals(self.get(view, data={}), [])
+        self.assertEquals(self.get(view, data={'a': '1'}), ['1'])
+
     def test_related_name(self):
         @param('a', related_name='b', type='int', default=[1], many=True, separator='|', validators='required')
         def view(request, b):
