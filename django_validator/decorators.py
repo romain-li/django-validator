@@ -136,6 +136,8 @@ class _Param(object):
             if self.many:
                 if isinstance(value, basestring):
                     values = value.split(self.separator)
+                elif value is None:
+                    values = []
                 else:
                     values = value
                 converted_value = [converter.convert(self.name, _value) for _value in values]
