@@ -19,6 +19,7 @@ Example:
     ConverterExample.register()
     ConverterExample.register('example')
 """
+import six
 
 from .validators import IntegerValidator, NumericValidator
 
@@ -37,7 +38,7 @@ class ConverterRegistry(object):
             name (str, iterable): Register key or name tuple.
             _class (BaseConverter): Converter class.
         """
-        if hasattr(name, '__iter__'):
+        if isinstance(name, (tuple, set, list)):
             for _name in name:
                 cls._registry[_name] = _class
         else:
@@ -63,11 +64,10 @@ class ConverterMetaClass(type):
         return _class
 
 
-class BaseConverter(object):
+class BaseConverter(six.with_metaclass(ConverterMetaClass)):
     """
     Abstract super class for all converters.
     """
-    __metaclass__ = ConverterMetaClass
 
     @staticmethod
     def convert(key, string):

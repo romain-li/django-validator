@@ -1,2 +1,2 @@
-django>=1.4.18
+django<2
 djangorestframework>=2.3.13

@@ -1,4 +1,5 @@
 from functools import wraps, partial
+import six
 
 from django.http import HttpRequest
 from django.views.generic import View
@@ -134,7 +135,7 @@ class _Param(object):
         value = self.lookup(request, self.name, self.default, kwargs, extra_kwargs)
         try:
             if self.many:
-                if isinstance(value, basestring):
+                if isinstance(value, six.string_types):
                     values = value.split(self.separator)
                 elif value is None:
                     values = []
