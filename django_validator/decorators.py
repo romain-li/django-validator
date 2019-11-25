@@ -100,7 +100,7 @@ class _Param(object):
                 # Call function immediately, maybe raise an error is better.
                 return func(*args, **kwargs)
 
-            extra_kwargs = None
+            extra_kwargs = {}
             if isinstance(args[0], View):
                 request = args[0].request
                 # Update the kwargs from Django REST framework's APIView class
