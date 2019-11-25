@@ -4,7 +4,7 @@ Inherit BaseValidator to implement the custom validators.
 """
 import os
 import re
-
+import six
 from django.core.files.base import File
 from django.utils.translation import ugettext_lazy as _
 
@@ -28,7 +28,7 @@ class ValidatorRegistry(object):
             name (str, iterable): Register key or name tuple.
             _class (BaseConverter): Validator class.
         """
-        if hasattr(name, '__iter__'):
+        if isinstance(name, (tuple, set, list)):
             for _name in name:
                 cls._registry[_name] = _class
         else:
@@ -141,7 +141,7 @@ class RequiredValidator(BaseValidator):
     def required_valid(value):
         if value is None:
             return False
-        elif isinstance(value, basestring) and value.strip() == '':
+        elif isinstance(value, six.string_types) and value.strip() == '':
             return False
         return True
 
@@ -218,7 +218,7 @@ class MinValidator(BaseValidator):
         self.min_value = int(min_value)
 
     def is_valid(self, value, params):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             self.message = _('The {{key}} must be at least {min} characters.').format(min=self.min_value)
             return len(value) >= self.min_value
         elif isinstance(value, File):
@@ -240,7 +240,7 @@ class MaxValidator(BaseValidator):
         self.max_value = int(max_value)
 
     def is_valid(self, value, params):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             self.message = _('The {{key}} may not be greater than {max} characters.').format(max=self.max_value)
             return len(value) <= self.max_value
         elif isinstance(value, File):
@@ -263,7 +263,7 @@ class BetweenValidator(BaseValidator):
         self.max_value = int(max_value)
 
     def is_valid(self, value, params):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             self.message = _('The {{key}} must be between {min} and {max} characters.').format(
                 min=self.min_value,
                 max=self.max_value
