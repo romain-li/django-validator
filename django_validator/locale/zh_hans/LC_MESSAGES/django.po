@@ -1,0 +1,113 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-11-28 15:58+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+#: .\django_validator\validators.py:92
+#, python-brace-format
+msgid "The {key} is invalid."
+msgstr "字段 {key} 无效"
+
+#: .\django_validator\validators.py:134
+#, python-brace-format
+msgid "The {key} is required."
+msgstr "字段 {key} 为必填"
+
+#: .\django_validator\validators.py:159
+#, python-brace-format
+msgid "The {{key}} is required with {other}"
+msgstr "当 {other} 存在时，字段 {{key}} 为必填"
+
+#: .\django_validator\validators.py:178
+#, python-brace-format
+msgid "The {{key}} is required without {other}"
+msgstr "当 {other} 不存在时，字段 {{key}} 为必填"
+
+#: .\django_validator\validators.py:199
+#, python-brace-format
+msgid "The {{key}} is required when {other} is {other_value}"
+msgstr "当 {other} 的值为 {other_value} 时 字段 {{key}} 为必填"
+
+#: .\django_validator\validators.py:222
+#, python-brace-format
+msgid "The {{key}} must be at least {min} characters."
+msgstr "字段 {{key}} 的字符数量不能小于 {min}"
+
+#: .\django_validator\validators.py:225
+#, python-brace-format
+msgid "The {{key}} must be at least {min} bytes."
+msgstr "字段 {{key}} 的字节数不能小于 {min} 字节"
+
+#: .\django_validator\validators.py:228
+#, python-brace-format
+msgid "The {{key}} must be at least {min}."
+msgstr "字段 {{key}} 的最小值为 {min}"
+
+#: .\django_validator\validators.py:244
+#, python-brace-format
+msgid "The {{key}} may not be greater than {max} characters."
+msgstr "字段 {{key}} 的字符数量不能大于 {max}"
+
+#: .\django_validator\validators.py:247
+#, python-brace-format
+msgid "The {{key}} must not be at greater {max} bytes."
+msgstr "字段 {{key}} 的字节数不能大于 {max} 字节"
+
+#: .\django_validator\validators.py:250
+#, python-brace-format
+msgid "The {{key}} may not be greater than {max}."
+msgstr "字段 {{key}} 的最大值为 {max}"
+
+#: .\django_validator\validators.py:267
+#, python-brace-format
+msgid "The {{key}} must be between {min} and {max} characters."
+msgstr "字段 {{key}} 的字符数量必须在 {min} 和 {max} 之间"
+
+#: .\django_validator\validators.py:273
+#, python-brace-format
+msgid "The {{key}} must be between {min} and {max} bytes."
+msgstr "字段 {{key}} 的字节数必须在 {min} 字节和 {max} 字节之间"
+
+#: .\django_validator\validators.py:279
+#, python-brace-format
+msgid "The {{key}} must be between {min} and {max}."
+msgstr "字段 {{key}} 的值必须在 {min} 和 {max} 之间"
+
+#: .\django_validator\validators.py:291
+#, python-brace-format
+msgid "The {key} format is invalid."
+msgstr "字段 {key} 的格式无效"
+
+#: .\django_validator\validators.py:318
+#, python-brace-format
+msgid "The {key} must be an integer."
+msgstr "字段 {key} 必须为Integer类型"
+
+#: .\django_validator\validators.py:330
+#, python-brace-format
+msgid "The {key} must be a number."
+msgstr "字段 {key} 必须为数字"
+
+#: .\django_validator\validators.py:342
+#, python-brace-format
+msgid "The selected {key} is invalid."
+msgstr "所选的字段 {key} 无效"
+
+#: .\django_validator\validators.py:372
+#, python-brace-format
+msgid "The extension type of {key} is invalid."
+msgstr "拓展类型 {key} 无效"

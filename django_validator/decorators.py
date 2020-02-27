@@ -1,4 +1,5 @@
 from functools import wraps, partial
+import six
 
 from django.http import HttpRequest
 from django.views.generic import View
@@ -99,7 +100,7 @@ class _Param(object):
                 # Call function immediately, maybe raise an error is better.
                 return func(*args, **kwargs)
 
-            extra_kwargs = None
+            extra_kwargs = {}
             if isinstance(args[0], View):
                 request = args[0].request
                 # Update the kwargs from Django REST framework's APIView class
@@ -134,7 +135,7 @@ class _Param(object):
         value = self.lookup(request, self.name, self.default, kwargs, extra_kwargs)
         try:
             if self.many:
-                if isinstance(value, basestring):
+                if isinstance(value, six.string_types):
                     values = value.split(self.separator)
                 elif value is None:
                     values = []

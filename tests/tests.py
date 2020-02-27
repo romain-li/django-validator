@@ -25,7 +25,7 @@ class FakeRequest(HttpRequest):
         """
         if params:
             params = params.copy()
-            for key, value in params.iteritems():
+            for key, value in params.items():
                 params[key] = str(value)
         return params
 
